@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>EventShare｜整組圖一次帶走</title>
+<style>
+  :root {
+    --bg: #faf7f0; --card: #ffffff; --ink: #1c212e; --ink2: #787468;
+    --line: #e6e0d2; --accent: #ff9c3a; --on-accent: #1c212e;
+    --ok: #2e9e5b; --bad: #df492f;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --bg: #181715; --card: #23211e; --ink: #f4f1ea; --ink2: #a09a8c;
+      --line: #37322b; --accent: #ff9c3a; --on-accent: #181715;
+      --ok: #58c486; --bad: #f0715a;
+    }
+  }
+  *, *::before, *::after { box-sizing: inherit; margin: 0; }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  body {
+    background: var(--bg); color: var(--ink);
+    font-family: "Noto Sans TC", "Noto Sans CJK TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+    line-height: 1.6; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 34rem; margin: 0 auto; padding: 1.25rem 1.25rem 2.5rem; position: relative; }
+
+  /* 四角 L 框：EventShare 圖卡的簽名 */
+  .frame { position: relative; padding: 1.5rem 1.1rem 1.25rem; }
+  .frame::before, .frame::after {
+    content: ""; position: absolute; width: 1.6rem; height: 1.6rem; pointer-events: none;
+    border: 3px solid var(--accent);
+  }
+  .frame::before { top: 0; left: 0; border-right: 0; border-bottom: 0; border-top-left-radius: 6px; }
+  .frame::after { bottom: 0; right: 0; border-left: 0; border-top: 0; border-bottom-right-radius: 6px; }
+
+  .brand { display: flex; align-items: center; gap: .6rem; font-weight: 700; letter-spacing: .02em; }
+  .mark {
+    width: 2rem; height: 2rem; border-radius: .5rem; background: var(--accent); color: #fff;
+    display: grid; place-items: center; font-size: 1.15rem; line-height: 1;
+  }
+  .brand small { display: block; font-weight: 400; color: var(--ink2); font-size: .75rem; letter-spacing: .12em; }
+
+  h1 {
+    font-family: "Noto Serif TC", "Noto Serif CJK TC", "Songti TC", "PMingLiU", serif;
+    font-weight: 900; font-size: 2.1rem; line-height: 1.25; letter-spacing: .03em;
+    margin: 1.4rem 0 .5rem;
+  }
+  .lead { color: var(--ink2); font-size: .95rem; }
+
+  .status {
+    margin: 1.2rem 0 .9rem; padding: .7rem .9rem; border-left: 4px solid var(--accent);
+    background: var(--card); border-radius: 0 .5rem .5rem 0; font-size: .95rem; min-height: 2.9rem;
+  }
+  .status.ok { border-left-color: var(--ok); }
+  .status.bad { border-left-color: var(--bad); }
+
+  .actions { display: grid; gap: .7rem; }
+  button {
+    font: inherit; font-weight: 700; font-size: 1.05rem; border-radius: .7rem; padding: .95rem 1rem;
+    border: 2px solid var(--ink); background: transparent; color: var(--ink); cursor: pointer;
+  }
+  button.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+  button:disabled { opacity: .4; cursor: default; }
+  button:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+  .hint { color: var(--ink2); font-size: .82rem; margin-top: .5rem; }
+
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; margin-top: 1.4rem; }
+  .cell {
+    position: relative; aspect-ratio: 4 / 5; background: var(--card); border: 1px solid var(--line);
+    border-radius: .5rem; overflow: hidden; display: grid; place-items: center;
+    color: var(--ink2); font-size: .8rem; text-decoration: none;
+  }
+  .cell img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .cell .no {
+    position: absolute; top: .3rem; left: .3rem; background: rgba(24, 23, 21, .78); color: #fff;
+    border-radius: 999px; font-size: .7rem; padding: .05rem .5rem; font-variant-numeric: tabular-nums;
+  }
+  .cell.fail { border-color: var(--bad); color: var(--bad); }
+  footer { margin-top: 1.6rem; color: var(--ink2); font-size: .78rem; }
+</style>
+</head>
+<body>
+<main>
+  <div class="frame">
+    <div class="brand">
+      <span class="mark" aria-hidden="true">✳</span>
+      <span>EventShare.26<small>發文小工具</small></span>
+    </div>
+
+    <h1>整組圖，<br>一次帶走</h1>
+    <p class="lead">圖載完之後，按一下就能把整組送進 Threads，或一次存到手機。</p>
+
+    <p class="status" id="status" role="status" aria-live="polite">正在準備圖片</p>
+
+    <div class="actions">
+      <button class="primary" id="share" disabled>分享到 Threads</button>
+      <button id="save" disabled>全部存到手機</button>
+    </div>
+    <p class="hint" id="hint">點下面任一張縮圖，可以只存那一張。</p>
+
+    <div class="grid" id="grid" aria-label="這一組的圖片"></div>
+
+    <footer>這一頁不會儲存任何資料，圖片網址來自你點進來的那個連結。</footer>
+  </div>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  // 只接受自家圖床的網址，避免這一頁被拿去載入不相干的東西
+  var ALLOWED_HOSTS = ['i.ibb.co'];
+
+  var statusEl = document.getElementById('status');
+  var shareBtn = document.getElementById('share');
+  var saveBtn = document.getElementById('save');
+  var hintEl = document.getElementById('hint');
+  var grid = document.getElementById('grid');
+
+  function setStatus(text, kind) {
+    statusEl.textContent = text;
+    statusEl.className = 'status' + (kind ? ' ' + kind : '');
+  }
+
+  function readUrls() {
+    var raw = new URLSearchParams(location.search).get('u') || '';
+    return raw.split(',').map(function (s) { return s.trim(); }).filter(function (s) {
+      try {
+        var u = new URL(s);
+        return u.protocol === 'https:' && ALLOWED_HOSTS.indexOf(u.hostname) !== -1;
+      } catch (e) { return false; }
+    });
+  }
+
+  function extOf(url, mime) {
+    if (mime === 'image/png') return '.png';
+    if (mime === 'image/webp') return '.webp';
+    if (mime === 'image/jpeg') return '.jpg';
+    var m = new URL(url).pathname.match(/\.(png|jpe?g|webp)$/i);
+    return m ? '.' + m[1].toLowerCase().replace('jpeg', 'jpg') : '.jpg';
+  }
+
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+
+  var urls = readUrls();
+  var items = urls.map(function (url, i) {
+    var cell = document.createElement('a');
+    cell.className = 'cell';
+    cell.setAttribute('role', 'button');
+    cell.innerHTML = '<span class="no">' + (i + 1) + '</span><span class="ph">載入中</span>';
+    grid.appendChild(cell);
+    return { url: url, cell: cell, file: null, objectUrl: null };
+  });
+
+  if (!items.length) {
+    setStatus('這個連結沒有帶到圖片網址，請回 LINE 重新點一次按鈕。', 'bad');
+    hintEl.textContent = '';
+    return;
+  }
+
+  var stamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+
+  function loadOne(item, i) {
+    return fetch(item.url, { mode: 'cors' }).then(function (res) {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.blob();
+    }).then(function (blob) {
+      var name = 'eventshare_' + stamp + '_' + pad(i) + extOf(item.url, blob.type);
+      item.file = new File([blob], name, { type: blob.type || 'image/jpeg' });
+      item.objectUrl = URL.createObjectURL(blob);
+      item.cell.href = item.objectUrl;
+      item.cell.download = name;
+      item.cell.querySelector('.ph').remove();
+      var img = document.createElement('img');
+      img.alt = '第 ' + (i + 1) + ' 張';
+      img.src = item.objectUrl;
+      item.cell.appendChild(img);
+    }).catch(function () {
+      item.cell.classList.add('fail');
+      item.cell.querySelector('.ph').textContent = '載入失敗';
+    }).then(progress);
+  }
+
+  var done = 0;
+  function progress() {
+    done += 1;
+    if (done < items.length) {
+      setStatus('正在準備圖片 ' + done + ' / ' + items.length);
+      return;
+    }
+    var ready = items.filter(function (it) { return it.file; });
+    if (!ready.length) {
+      setStatus('圖片全部載入失敗，可能是網路或圖床的問題，請稍後重新整理。', 'bad');
+      return;
+    }
+    var missing = items.length - ready.length;
+    setStatus(missing
+      ? '備妥 ' + ready.length + ' 張，另外 ' + missing + ' 張載入失敗。'
+      : items.length + ' 張都備妥了。', missing ? 'bad' : 'ok');
+
+    saveBtn.disabled = false;
+    saveBtn.textContent = '全部存到手機（' + ready.length + ' 張）';
+
+    var files = ready.map(function (it) { return it.file; });
+    var canShare = !!(navigator.canShare && navigator.canShare({ files: files }));
+    if (canShare) {
+      shareBtn.disabled = false;
+      shareBtn.textContent = '分享到 Threads（' + ready.length + ' 張）';
+    } else {
+      shareBtn.textContent = '這個瀏覽器不能一次分享多張';
+      hintEl.textContent = '請改用「全部存到手機」，或點縮圖一張一張存。';
+    }
+  }
+
+  shareBtn.addEventListener('click', function () {
+    var files = items.filter(function (it) { return it.file; }).map(function (it) { return it.file; });
+    navigator.share({ files: files }).then(function () {
+      setStatus('已送到分享選單。在 Threads 貼上文案就能發。', 'ok');
+    }).catch(function (err) {
+      if (err && err.name === 'AbortError') {
+        setStatus('你關掉了分享選單，圖片還在，可以再按一次。');
+      } else {
+        setStatus('分享沒有成功，請改用「全部存到手機」。', 'bad');
+      }
+    });
+  });
+
+  saveBtn.addEventListener('click', function () {
+    var ready = items.filter(function (it) { return it.file; });
+    saveBtn.disabled = true;
+    var chain = Promise.resolve();
+    ready.forEach(function (it) {
+      chain = chain.then(function () {
+        var a = document.createElement('a');
+        a.href = it.objectUrl;
+        a.download = it.file.name;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        return sleep(400);
+      });
+    });
+    chain.then(function () {
+      saveBtn.disabled = false;
+      setStatus('已送出 ' + ready.length + ' 個下載。第一次瀏覽器會問要不要允許下載多個檔案，請按允許。', 'ok');
+    });
+  });
+
+  setStatus('正在準備圖片 0 / ' + items.length);
+  items.forEach(loadOne);
+})();
+</script>
+</body>
+</html>
